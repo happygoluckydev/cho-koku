@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Cloudflare
+.wrangler/
+
+# env
+.env
+.env.*
+!.env.example
+
+# Claude Code local
+.claude/settings.local.json
+CLAUDE.local.md
+
+# misc
+.DS_Store
+*.log

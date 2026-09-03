@@ -1,0 +1,6 @@
+# Cloudflare Pages設定の雛形。
+# Next.js on Cloudflare Pagesのビルド方法（@cloudflare/next-on-pages 等）は
+# 変更されることがあるため、導入時に公式ドキュメントで最新の手順を確認して
+# 値を埋めること（このファイルはプレースホルダー）。
+name = "cho-koku"
+compatibility_date = "2025-01-01"
