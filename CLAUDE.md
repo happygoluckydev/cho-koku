@@ -8,7 +8,8 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 - 開発サーバー: `pnpm dev`
 - ビルド: `pnpm build`
 - リント: `pnpm lint`
-- Cloudflare Pagesへのデプロイ: `pnpm deploy` — 理由: 本番環境に影響するため実行前に確認を取る
+- 型チェック: `pnpm typecheck`
+- Cloudflare Workersへのデプロイ: `pnpm deploy:cf` — 理由: 本番環境に影響するため実行前に確認を取る。`pnpm deploy` は pnpm の組み込みコマンドと衝突するため使わない。OpenNext（`@opennextjs/cloudflare`）の導入は未着手で、現状のスクリプトは未設定メッセージを出して失敗する
 - Supabaseマイグレーション適用: `.claude/skills/db-migration/SKILL.md` の手順に従う
 
 ## 構成
@@ -28,6 +29,14 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 
 - アイデアの更新・削除ロジックは書かない（`docs/requirements.md` §3.2 でスコープ外と決定済み）。修正が必要な場合はSupabaseダッシュボードから直接操作する
 - `ideas` テーブルの `user_id` 列は将来の複数ユーザー対応のための予備列。現状のコードでは常に固定値を入れるだけでよく、認可ロジックは実装しない
+
+## 決定済み・未実装の設計変更
+
+`docs/review-2026-09-03.md` のレビューを受けて決定した。実装時はこの節を更新する。
+
+- **デプロイ先は Cloudflare Workers + `@opennextjs/cloudflare`**（Pages + `@cloudflare/next-on-pages` はメンテナンスモードのため不採用）。`wrangler.toml` / `next.config.ts` / `deploy:cf` スクリプトの実体はこの導入時に書く
+- **認証は Cloudflare Access をアプリの前段に置く**。`APP_API_TOKEN` によるガードは Access 導入後に削除し、`.env.example` からも消す
+- **スキーマは `ideas`（セッションのヘッダ）+ `idea_messages`（メッセージ単位の追記）の2テーブルに分割する**。Supabase 未適用のため `0001_create_ideas.sql` を書き直す（追加マイグレーションにはしない）。`pg_trgm` の有効化と両テーブルの RLS も同時に入れる。`src/types/idea.ts` は SDK の `Anthropic.MessageParam` を使う形に合わせて更新する
 
 ## ドメイン用語
 
