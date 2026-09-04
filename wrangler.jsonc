@@ -1,0 +1,20 @@
+// Cloudflare Workers 設定（@opennextjs/cloudflare 用）。
+// - R2 増分キャッシュ / Images バインディングは使わない（ISR も next/image も使わないため）
+// - 環境変数（ANTHROPIC_API_KEY 等）はここに書かず、`wrangler secret put` で登録する
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "cho-koku",
+  "compatibility_date": "2026-08-31",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "cho-koku"
+    }
+  ]
+}
