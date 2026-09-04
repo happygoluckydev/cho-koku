@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-// Cloudflare Pages上でNext.jsのApp Router + API Routesを動かすための設定。
-// ランタイム固有の制約（Edge Runtime必須など）は導入時に公式ドキュメントで確認する。
+// Cloudflare Workers（@opennextjs/cloudflare）上で動かす。
+// ビルド・デプロイは `pnpm deploy:cf`、ローカルで Workers ランタイムを確認するときは `pnpm preview`。
+// API ルートに `export const runtime = "edge"` は書かない（OpenNext は Node.js ランタイム前提）。
 const nextConfig: NextConfig = {};
 
 export default nextConfig;
+
+// `next dev` 中に Cloudflare のバインディング（getCloudflareContext）を使えるようにする
+initOpenNextCloudflareForDev();
