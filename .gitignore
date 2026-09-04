@@ -9,6 +9,9 @@ next-env.d.ts
 
 # Cloudflare
 .wrangler/
+.open-next/
+.dev.vars
+cloudflare-env.d.ts
 
 # env
 .env

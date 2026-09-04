@@ -1,11 +1,26 @@
-// アイデア（記録）1件の型定義。supabase/migrations/0001_create_ideas.sql の ideas テーブルに対応する。
-// NOTE: スキーマ分割（ideas + idea_messages）時に、transcript は SDK の Anthropic.MessageParam[] を
-// 使う形に合わせて書き直す（CLAUDE.md「決定済み・未実装の設計変更」参照）。
+// アイデア（記録）の型定義。supabase/migrations/0001_create_ideas.sql の
+// ideas / idea_messages テーブルに対応する。
 
+import type Anthropic from "@anthropic-ai/sdk";
+
+/** 1つの対話セッション（= アイデア1件）のヘッダ。 */
 export interface Idea {
   id: string;
   userId: string | null;
-  transcript: unknown;
   summary: string | null;
   createdAt: string;
+}
+
+/** 対話メッセージ1件。role は Anthropic SDK の MessageParam と同じ値域。 */
+export interface IdeaMessage {
+  id: string;
+  ideaId: string;
+  role: Anthropic.MessageParam["role"];
+  content: string;
+  createdAt: string;
+}
+
+/** DB のメッセージ列を Claude API に渡す形に変換する。 */
+export function toMessageParam(message: IdeaMessage): Anthropic.MessageParam {
+  return { role: message.role, content: message.content };
 }

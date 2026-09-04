@@ -1,6 +1,0 @@
-# Cloudflare Workers設定の雛形。
-# @opennextjs/cloudflare 導入時に main / compatibility_flags / assets などを
-# 公式ドキュメントの最新手順に従って埋めること（このファイルはプレースホルダー）。
-# CLAUDE.md「決定済み・未実装の設計変更」参照。
-name = "cho-koku"
-compatibility_date = "2025-01-01"

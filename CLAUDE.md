@@ -9,15 +9,17 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 - ビルド: `pnpm build`
 - リント: `pnpm lint`
 - 型チェック: `pnpm typecheck`
-- Cloudflare Workersへのデプロイ: `pnpm deploy:cf` — 理由: 本番環境に影響するため実行前に確認を取る。`pnpm deploy` は pnpm の組み込みコマンドと衝突するため使わない。OpenNext（`@opennextjs/cloudflare`）の導入は未着手で、現状のスクリプトは未設定メッセージを出して失敗する
+- Workersランタイムでのローカル確認: `pnpm preview`（OpenNext でビルドして wrangler で起動）
+- Cloudflare Workersへのデプロイ: `pnpm deploy:cf` — 理由: 本番環境に影響するため実行前に確認を取る。`pnpm deploy` は pnpm の組み込みコマンドと衝突するため使わない。初回のシークレット登録などは `docs/cloudflare-setup.md`
 - Supabaseマイグレーション適用: `.claude/skills/db-migration/SKILL.md` の手順に従う
 
 ## 構成
 
 - `src/app/` — Next.js App Router。画面は `src/app/page.tsx` の1画面のみ（チャットUI）
-- `src/app/api/chat/route.ts` — Claude API呼び出しの唯一の入口。APIキーガード（`APP_API_TOKEN`）とtool use（過去アイデア検索）をここで扱う
+- `src/app/api/chat/route.ts` — Claude API呼び出しの唯一の入口。tool use（過去アイデア検索）をここで扱う。認証はアプリの前段の Cloudflare Access に委ねるため、ルート内に認証コードは書かない
 - `src/lib/` — Supabase / Anthropic クライアントのラッパーと、アイデアの読み書き（`ideas.ts`）
-- `supabase/migrations/` — DBスキーマ。追記のみの方針をスキーマにも反映している（更新・削除カラムは持たせない）
+- `supabase/migrations/` — DBスキーマ。`ideas`（セッションのヘッダ）と `idea_messages`（メッセージ単位の追記）の2テーブル。追記のみの方針をスキーマにも反映している（更新・削除カラムは持たせない）
+- `wrangler.jsonc` / `open-next.config.ts` — Cloudflare Workers へのデプロイ設定（`@opennextjs/cloudflare`）。ダッシュボード側の作業は `docs/cloudflare-setup.md`
 - 機能が小さいうちは機能別ディレクトリに分けない。2機能目が増えて衝突するまで `src/lib/` 直下でよい — 理由: 現状1画面・1APIルートのみでYAGNI
 
 ## アーキテクチャの境界
@@ -29,14 +31,17 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 
 - アイデアの更新・削除ロジックは書かない（`docs/requirements.md` §3.2 でスコープ外と決定済み）。修正が必要な場合はSupabaseダッシュボードから直接操作する
 - `ideas` テーブルの `user_id` 列は将来の複数ユーザー対応のための予備列。現状のコードでは常に固定値を入れるだけでよく、認可ロジックは実装しない
+- `ideas.summary` はセッション開始時にヘッダ行と同時に INSERT する。後から UPDATE で埋めない — 理由: 追記のみの方針を守るため
+- `idea_messages.content` はプレーンテキストのみ。tool use の中間ブロック（`tool_use` / `tool_result`）は保存しない — 理由: そのターン内で完結し、`pg_trgm` で本文をそのまま検索したいため
+- API ルートに `export const runtime = "edge"` を書かない — 理由: OpenNext は Node.js ランタイム前提
 
-## 決定済み・未実装の設計変更
+## 設計判断の記録
 
-`docs/review-2026-09-03.md` のレビューを受けて決定した。実装時はこの節を更新する。
+`docs/review-2026-09-03.md` のレビューを受けて 2026-09-03 に決定し、実装済み:
 
-- **デプロイ先は Cloudflare Workers + `@opennextjs/cloudflare`**（Pages + `@cloudflare/next-on-pages` はメンテナンスモードのため不採用）。`wrangler.toml` / `next.config.ts` / `deploy:cf` スクリプトの実体はこの導入時に書く
-- **認証は Cloudflare Access をアプリの前段に置く**。`APP_API_TOKEN` によるガードは Access 導入後に削除し、`.env.example` からも消す
-- **スキーマは `ideas`（セッションのヘッダ）+ `idea_messages`（メッセージ単位の追記）の2テーブルに分割する**。Supabase 未適用のため `0001_create_ideas.sql` を書き直す（追加マイグレーションにはしない）。`pg_trgm` の有効化と両テーブルの RLS も同時に入れる。`src/types/idea.ts` は SDK の `Anthropic.MessageParam` を使う形に合わせて更新する
+- デプロイ先は Cloudflare Workers + `@opennextjs/cloudflare`（Pages + `@cloudflare/next-on-pages` はメンテナンスモードのため不採用）
+- 認証は Cloudflare Access をアプリの前段に置く。アプリ側の共有トークン（旧 `APP_API_TOKEN`）は廃止した。ダッシュボード側の設定手順は `docs/cloudflare-setup.md`
+- スキーマは `ideas` + `idea_messages` の2テーブル。`0001_create_ideas.sql` を書き直した（Supabase 未適用のため追加マイグレーションにしていない）
 
 ## ドメイン用語
 

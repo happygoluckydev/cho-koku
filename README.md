@@ -10,8 +10,10 @@
 cho-koku/
 ├── src/app/                  # Next.js App Router（チャットUI 1画面 + /api/chat）
 ├── src/lib/                  # Supabase / Anthropic クライアント、アイデアの読み書き
-├── supabase/migrations/      # DBスキーマ
-├── docs/                     # 要件定義書、レビュー記録
+├── supabase/migrations/      # DBスキーマ（ideas + idea_messages）
+├── docs/                     # 要件定義書、Cloudflare セットアップ手順、レビュー記録
+├── wrangler.jsonc            # Cloudflare Workers 設定
+├── open-next.config.ts       # OpenNext（Next.js → Workers）設定
 └── .claude/                  # Claude Code設定・スキル
 ```
 
@@ -23,7 +25,12 @@ cho-koku/
 
 ## デプロイ
 
-Cloudflare Workers（`@opennextjs/cloudflare`）+ Cloudflare Access を想定。導入は未着手。詳細は `CLAUDE.md` の「コマンド」「決定済み・未実装の設計変更」節を参照。
+Cloudflare Workers（`@opennextjs/cloudflare`）にデプロイし、Cloudflare Access でメール認証をかける。
+手順は [`docs/cloudflare-setup.md`](docs/cloudflare-setup.md)。
+
+```sh
+pnpm deploy:cf
+```
 
 ## ライセンス
 
