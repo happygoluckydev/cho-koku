@@ -20,8 +20,13 @@ cho-koku/
 ## セットアップ
 
 1. `.env.example` を `.env.local` にコピーし、値を埋める
-2. `pnpm install`
-3. `pnpm dev`
+2. Supabase に `supabase/migrations/` のスキーマを適用する（`.claude/skills/db-migration/SKILL.md`）
+3. `pnpm install`
+4. `pnpm dev`
+
+## 使い方
+
+画面を開くと新しいセッションが始まる。アイデアを書いて送る（Ctrl+Enter / ⌘+Enter）と、Claude が問いを返しながら形にしていく。対話はメッセージ単位で Supabase に追記され、Claude は必要に応じて過去のアイデアを検索して参照する。「新しいアイデア」で次のセッションに移る。
 
 ## デプロイ
 
