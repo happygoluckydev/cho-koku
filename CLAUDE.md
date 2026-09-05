@@ -66,4 +66,5 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 ## 参照
 
 - 要件: `docs/requirements.md`
+- 残件: `docs/todo.md`
 - 環境変数: `.env.example`

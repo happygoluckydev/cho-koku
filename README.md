@@ -2,7 +2,7 @@
 
 彫刻（頭の中にある考えを彫り出す）× 超克（自分の考えを超える）— Claudeと対話しながらアイデアを記録・ブラッシュアップする個人用ツール。
 
-要件定義は [`docs/requirements.md`](docs/requirements.md)、Claude Code向けの開発ルールとディレクトリ構成の詳細は [`CLAUDE.md`](CLAUDE.md) を参照。
+要件定義は [`docs/requirements.md`](docs/requirements.md)、残件は [`docs/todo.md`](docs/todo.md)、Claude Code向けの開発ルールとディレクトリ構成の詳細は [`CLAUDE.md`](CLAUDE.md) を参照。
 
 ## 構成
 
