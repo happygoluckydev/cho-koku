@@ -6,7 +6,10 @@
 > 注意: この手順は 2026-09-04 時点の一般的な流れをもとに書いている。ダッシュボードのメニュー名は
 > 変わることがあるので、迷ったら Cloudflare の公式ドキュメント（Workers / Zero Trust Access）を確認する。
 
-## 1. Workers へのデプロイ
+## 1. Workers へのデプロイ（手元のマシンから行う場合）
+
+手元に開発環境を作らずに運用するなら、この節は飛ばして §3 の GitHub Actions を使う。
+どちらか一方でよい（両方あっても構わない）。
 
 ### 初回のみ
 
@@ -66,3 +69,59 @@ pnpm deploy:cf
 - ローカル開発（`pnpm dev` / `pnpm preview`）は Access を通らない。ローカルは自分の PC からしか到達できない前提で運用する
 - 将来、Worker 側でも Access の JWT（`Cf-Access-Jwt-Assertion` ヘッダ）を検証したくなったら、
   アプリケーションの **AUD tag** とチームドメインの証明書エンドポイントを使って検証する。v1 では行わない
+
+## 3. GitHub Actions からデプロイする（ローカル環境なしの運用）
+
+`main` への push で `.github/workflows/deploy.yml` が動き、Workers にデプロイされる。
+手元に clone も `wrangler login` も不要で、ブラウザだけで完結する。
+
+### 初回のみ
+
+#### 3-1. Cloudflare の API トークンを作る
+
+1. Cloudflare ダッシュボード → 右上のアイコン → **My Profile → API Tokens → Create Token**
+2. テンプレート **Edit Cloudflare Workers** を選ぶ（Workers スクリプトの編集権限が付く）
+3. Account Resources を自分のアカウントに絞って作成し、表示されたトークンを控える
+   （この画面を閉じると二度と表示されない）
+
+#### 3-2. アカウント ID を控える
+
+ダッシュボードの **Workers & Pages** を開くと右側のサイドバーに **Account ID** が出る。
+
+#### 3-3. GitHub にシークレットを登録する
+
+リポジトリの **Settings → Secrets and variables → Actions → New repository secret** で2つ登録する。
+
+| 名前 | 値 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | 3-1 で作ったトークン |
+| `CLOUDFLARE_ACCOUNT_ID` | 3-2 のアカウント ID |
+
+#### 3-4. 一度デプロイして Worker を作る
+
+`main` に push するか、**Actions → Deploy → Run workflow** を押す。
+この時点ではアプリのシークレットが未登録なので、画面は出るがチャットは動かない。
+
+#### 3-5. Worker にアプリのシークレットを登録する
+
+**Workers & Pages → cho-koku → Settings → Variables and Secrets** で、`.env.example` の3つを
+**Secret** 種別で追加する（`Text` ではなく `Secret` を選ぶこと）。
+
+- `ANTHROPIC_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+ここで登録した値は以後のデプロイで消えないので、登録は一度だけでよい。
+`wrangler secret put`（§1）と同じものをダッシュボードから行っているだけ。
+
+### デプロイのたびに
+
+`main` に push するだけ。Actions タブで結果を確認する。
+手動で流したいときは **Actions → Deploy → Run workflow**。
+
+### 注意
+
+- ワークフローの `on.push.branches` は `main` を見ている。リポジトリのデフォルトブランチが
+  `main` でない場合、PR をマージしてもデプロイは走らない
+- CI（`.github/workflows/ci.yml`）は PR と `main` への push で型チェック・リント・ビルドを回す。
+  こちらはシークレット不要

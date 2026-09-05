@@ -1,0 +1,38 @@
+# 型チェック・リント・ビルドを回す。ローカル環境を持たない運用のため、
+# 手元で `pnpm typecheck && pnpm lint && pnpm build` を実行する代わりになる。
+# 環境変数は不要（Supabase / Anthropic のクライアントは遅延生成なので、値が無くてもビルドは通る）。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm のバージョンは package.json の packageManager から解決される
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm lint
+
+      - run: pnpm build
