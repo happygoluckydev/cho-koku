@@ -1,0 +1,45 @@
+# main への push で Cloudflare Workers にデプロイする。
+# ローカル環境を持たずに運用するための仕組み（docs/todo.md A-5）。
+#
+# 必要な GitHub Secrets（Settings → Secrets and variables → Actions）:
+#   CLOUDFLARE_API_TOKEN   … Workers のデプロイ権限を持つ API トークン
+#   CLOUDFLARE_ACCOUNT_ID  … Cloudflare のアカウント ID
+# アプリが使う ANTHROPIC_API_KEY / SUPABASE_* は Worker 側のシークレットとして
+# 別に登録する（デプロイでは上書きされない）。手順は docs/cloudflare-setup.md §3。
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# デプロイ同士が重ならないようにする。実行中のものは中断せず、順番に流す
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `opennextjs-cloudflare build`（next build + Workers 向けバンドル）に続けて
+      # `opennextjs-cloudflare deploy` を実行する。wrangler は下の env を読む
+      - name: Build and deploy to Cloudflare Workers
+        run: pnpm deploy:cf
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -10,7 +10,7 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 - リント: `pnpm lint`
 - 型チェック: `pnpm typecheck`
 - Workersランタイムでのローカル確認: `pnpm preview`（OpenNext でビルドして wrangler で起動）
-- Cloudflare Workersへのデプロイ: `pnpm deploy:cf` — 理由: 本番環境に影響するため実行前に確認を取る。`pnpm deploy` は pnpm の組み込みコマンドと衝突するため使わない。初回のシークレット登録などは `docs/cloudflare-setup.md`
+- Cloudflare Workersへのデプロイ: 通常は `main` への push で GitHub Actions（`.github/workflows/deploy.yml`）が自動実行する。**`main` への push は本番デプロイを意味する**ので、マージ前に内容を確認する。手元から直接デプロイする場合のみ `pnpm deploy:cf` — 理由: 本番環境に影響するため実行前に確認を取る。`pnpm deploy` は pnpm の組み込みコマンドと衝突するため使わない。初回のシークレット登録などは `docs/cloudflare-setup.md`
 - Supabaseマイグレーション適用: `.claude/skills/db-migration/SKILL.md` の手順に従う
 
 ## 構成
@@ -22,6 +22,7 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 - `src/lib/supabase.ts` — Supabase クライアントの遅延生成（サービスロールキー）
 - `supabase/migrations/` — DBスキーマ。`ideas`（セッションのヘッダ）と `idea_messages`（メッセージ単位の追記）の2テーブル。追記のみの方針をスキーマにも反映している（更新・削除カラムは持たせない）
 - `wrangler.jsonc` / `open-next.config.ts` — Cloudflare Workers へのデプロイ設定（`@opennextjs/cloudflare`）。ダッシュボード側の作業は `docs/cloudflare-setup.md`
+- `.github/workflows/` — `ci.yml`（PR と `main` への push で型チェック・リント・ビルド）と `deploy.yml`（`main` への push で Workers へデプロイ）。ローカル環境を持たずに運用するための仕組み
 - 機能が小さいうちは機能別ディレクトリに分けない。2機能目が増えて衝突するまで `src/lib/` 直下でよい — 理由: 現状1画面・1APIルートのみでYAGNI
 
 ## アーキテクチャの境界
@@ -66,4 +67,5 @@ Claudeと対話しながらアイデアを彫り出し・ブラッシュアッ�
 ## 参照
 
 - 要件: `docs/requirements.md`
+- 残件: `docs/todo.md`
 - 環境変数: `.env.example`
